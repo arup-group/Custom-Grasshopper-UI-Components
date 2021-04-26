@@ -4,7 +4,7 @@ This project is a template repo for creating Custom Grasshopper components with 
 
 Two components are provided in the template; one with a clickable button and another with two dropdown menus.
 
-![Alt text](readme-screenshot.JPG?raw=true "Title")
+
 
 ## To get started:
 1. Clone this repo
