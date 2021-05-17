@@ -113,6 +113,9 @@ namespace CustomUI
                 };
                 graphics.DrawPath(pen, button);
 
+                System.Drawing.Drawing2D.GraphicsPath overlay = RoundedRect(ButtonBounds, 2, true);
+                graphics.FillPath(new SolidBrush(Color.FromArgb(mouseDown ? 0 : mouseOver ? 40 : 60, 255, 255, 255)), overlay);
+
                 // draw button text
                 graphics.DrawString(buttonText, font, ButtonColours.AnnotationTextBright, ButtonBounds, GH_TextRenderingConstants.CenterCenter);
             }
@@ -245,16 +248,20 @@ namespace CustomUI
             return sp;
         }
 
-        public static GraphicsPath RoundedRect(RectangleF bounds, int radius)
+        public static GraphicsPath RoundedRect(RectangleF bounds, int radius, bool overlay = false)
         {
+            RectangleF b = new RectangleF(bounds.X, bounds.Y, bounds.Width, bounds.Height);
             int diameter = radius * 2;
             Size size = new Size(diameter, diameter);
-            RectangleF arc = new RectangleF(bounds.Location, size);
+            RectangleF arc = new RectangleF(b.Location, size);
             GraphicsPath path = new GraphicsPath();
+            
+            if (overlay)
+                b.Height = diameter;
 
             if (radius == 0)
             {
-                path.AddRectangle(bounds);
+                path.AddRectangle(b);
                 return path;
             }
 
@@ -262,16 +269,23 @@ namespace CustomUI
             path.AddArc(arc, 180, 90);
 
             // top right arc  
-            arc.X = bounds.Right - diameter;
+            arc.X = b.Right - diameter;
             path.AddArc(arc, 270, 90);
 
-            // bottom right arc  
-            arc.Y = bounds.Bottom - diameter;
-            path.AddArc(arc, 0, 90);
+            if (!overlay)
+            {
+                // bottom right arc  
+                arc.Y = b.Bottom - diameter;
+                path.AddArc(arc, 0, 90);
 
-            // bottom left arc 
-            arc.X = bounds.Left;
-            path.AddArc(arc, 90, 90);
+                // bottom left arc 
+                arc.X = b.Left;
+                path.AddArc(arc, 90, 90);
+            }
+            else
+            {
+                path.AddLine(new PointF(b.X + b.Width, b.Y + b.Height), new PointF(b.X, b.Y + b.Height));
+            }
 
             path.CloseFigure();
             return path;
@@ -288,8 +302,8 @@ namespace CustomUI
     {
         //Set colours for Component UI
         static readonly Color Primary = Color.FromArgb(255, 229, 27, 36);
-        static readonly Color Primary_light = Color.FromArgb(255, 255, 93, 78);
-        static readonly Color Primary_dark = Color.FromArgb(255, 170, 0, 0);
+        static readonly Color Primary_light = WhiteOverlay(Primary, 0.32);
+        static readonly Color Primary_dark = Overlay(Primary, Color.Black, 0.32);
         public static Brush ButtonColor
         {
             get { return new SolidBrush(Primary); }
@@ -324,11 +338,11 @@ namespace CustomUI
         }
         public static Brush HoverButtonColour
         {
-            get { return new SolidBrush(WhiteOverlay(Primary, 0.16)); }
+            get { return new SolidBrush(Overlay(Primary, Color.Black, 0.04)); }
         }
         public static Color HoverBorderColour
         {
-            get { return Color.White; }
+            get { return WhiteOverlay(Primary, 0.86); }
         }
 
         public static Color WhiteOverlay(Color original, double ratio)
@@ -339,5 +353,13 @@ namespace CustomUI
                 (int)(ratio * white.G + (1 - ratio) * original.G),
                 (int)(ratio * white.B + (1 - ratio) * original.B));
         }
+        public static Color Overlay(Color original, Color overlay, double ratio)
+        {
+            return Color.FromArgb(255,
+                (int)(ratio * overlay.R + (1 - ratio) * original.R),
+                (int)(ratio * overlay.G + (1 - ratio) * original.G),
+                (int)(ratio * overlay.B + (1 - ratio) * original.B));
+        }
+
     }
 }

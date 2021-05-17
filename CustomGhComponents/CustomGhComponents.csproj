@@ -56,10 +56,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Components\ComponentWithSlider.cs" />
     <Compile Include="Components\ComponentWithDropDown.cs" />
     <Compile Include="Components\ComponentWithButton.cs" />
     <Compile Include="CustomUI\DropDownUIAttributes.cs" />
     <Compile Include="CustomUI\ButtonUIAttributes.cs" />
+    <Compile Include="CustomUI\SliderUIAttributes.cs" />
     <Compile Include="PluginInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
