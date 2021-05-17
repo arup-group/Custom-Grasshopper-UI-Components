@@ -13,3 +13,4 @@ https://developer.rhino3d.com/guides/grasshopper/your-first-component-windows/#b
 
 3. Remember to give each one of your own components a unique ids, you can generate GUIDs from here: https://www.guidgenerator.com/
 
+"# Custom-Grasshopper-UI-Components" 
