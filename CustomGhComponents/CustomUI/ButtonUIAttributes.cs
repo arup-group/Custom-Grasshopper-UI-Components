@@ -6,6 +6,7 @@ using System;
 using System.Drawing;
 using System.Collections.Generic;
 using Rhino.Display;
+using System.Drawing.Drawing2D;
 
 namespace CustomUI
 {
@@ -61,7 +62,7 @@ namespace CustomUI
 
             int h1 = 20; // height of button
             // create text box placeholders
-            ButtonBounds = new RectangleF(Bounds.X + 2 * s, Bounds.Bottom + h0 + 2 * s, Bounds.Width - 2 - 4 * s, h1);
+            ButtonBounds = new RectangleF(Bounds.X + 2 * s, Bounds.Bottom + h0 + 2 * s, Bounds.Width - 4 * s, h1);
 
             //update component bounds
             Bounds = new RectangleF(Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height + h0 + h1 + 4 * s);
@@ -74,10 +75,7 @@ namespace CustomUI
             if (channel == GH_CanvasChannel.Objects)
             {
                 Pen spacer = new Pen(ButtonColours.SpacerColour);
-                Pen pen = new Pen(mouseDown ? ButtonColours.ClickedBorderColour : ButtonColours.BorderColour)
-                {
-                    Width = 0.5f
-                };
+
                 Font font = GH_FontServer.Standard;
                 // adjust fontsize to high resolution displays
                 font = new Font(font.FontFamily, font.Size / GH_GraphicsUtil.UiScale, FontStyle.Regular);
@@ -95,9 +93,28 @@ namespace CustomUI
                 }
 
                 // Draw button box
-                graphics.FillRectangle(mouseDown ? ButtonColours.ClickedButtonColor : ButtonColours.ButtonColor, ButtonBounds);
-                graphics.DrawRectangle(pen, ButtonBounds.X, ButtonBounds.Y, ButtonBounds.Width, ButtonBounds.Height);
-                graphics.DrawString(buttonText, font, mouseDown ? ButtonColours.AnnotationTextDark : ButtonColours.AnnotationTextBright, ButtonBounds, GH_TextRenderingConstants.CenterCenter);
+                System.Drawing.Drawing2D.GraphicsPath button = RoundedRect(ButtonBounds, 2);
+
+                Brush normal_colour = ButtonColours.ButtonColor;
+                Brush hover_colour = ButtonColours.HoverButtonColour;
+                Brush clicked_colour = ButtonColours.ClickedButtonColour;
+
+                Brush butCol = (mouseOver) ? hover_colour : normal_colour;
+                graphics.FillPath(mouseDown ? clicked_colour : butCol, button);
+
+                // draw button edge
+                Color edgeColor = ButtonColours.BorderColour;
+                Color edgeHover = ButtonColours.HoverBorderColour;
+                Color edgeClick = ButtonColours.ClickedBorderColour;
+                Color edgeCol = (mouseOver) ? edgeHover : edgeColor;
+                Pen pen = new Pen(mouseDown ? edgeClick : edgeCol)
+                {
+                    Width = (mouseDown) ? 0.8f : 0.5f
+                };
+                graphics.DrawPath(pen, button);
+
+                // draw button text
+                graphics.DrawString(buttonText, font, ButtonColours.AnnotationTextBright, ButtonBounds, GH_TextRenderingConstants.CenterCenter);
             }
         }
         public override GH_ObjectResponse RespondToMouseDown(GH_Canvas sender, GH_CanvasMouseEvent e)
@@ -108,7 +125,7 @@ namespace CustomUI
                 if (rec.Contains(e.CanvasLocation))
                 {
                     mouseDown = true;
-                    Owner.ExpireSolution(true);
+                    Owner.OnDisplayExpired(false);
                     return GH_ObjectResponse.Capture;
                 }
             }
@@ -125,13 +142,36 @@ namespace CustomUI
                     if (mouseDown)
                     {
                         mouseDown = false;
+                        mouseOver = false;
+                        Owner.OnDisplayExpired(false);
                         action();
-                        Owner.ExpireSolution(true);
+                        //                        Owner.ExpireSolution(true);
                         return GH_ObjectResponse.Release;
                     }
                 }
             }
             return base.RespondToMouseUp(sender, e);
+        }
+        bool mouseOver;
+        public override GH_ObjectResponse RespondToMouseMove(GH_Canvas sender, GH_CanvasMouseEvent e)
+        {
+            if (ButtonBounds.Contains(e.CanvasLocation))
+            {
+                mouseOver = true;
+                Owner.OnDisplayExpired(false);
+                sender.Cursor = System.Windows.Forms.Cursors.Hand;
+                return GH_ObjectResponse.Capture;
+            }
+
+            if (mouseOver)
+            {
+                mouseOver = false;
+                Owner.OnDisplayExpired(false);
+                Grasshopper.Instances.CursorServer.ResetCursor(sender);
+                return GH_ObjectResponse.Release;
+            }
+
+            return base.RespondToMouseMove(sender, e);
         }
 
 
@@ -204,6 +244,38 @@ namespace CustomUI
             }
             return sp;
         }
+
+        public static GraphicsPath RoundedRect(RectangleF bounds, int radius)
+        {
+            int diameter = radius * 2;
+            Size size = new Size(diameter, diameter);
+            RectangleF arc = new RectangleF(bounds.Location, size);
+            GraphicsPath path = new GraphicsPath();
+
+            if (radius == 0)
+            {
+                path.AddRectangle(bounds);
+                return path;
+            }
+
+            // top left arc  
+            path.AddArc(arc, 180, 90);
+
+            // top right arc  
+            arc.X = bounds.Right - diameter;
+            path.AddArc(arc, 270, 90);
+
+            // bottom right arc  
+            arc.Y = bounds.Bottom - diameter;
+            path.AddArc(arc, 0, 90);
+
+            // bottom left arc 
+            arc.X = bounds.Left;
+            path.AddArc(arc, 90, 90);
+
+            path.CloseFigure();
+            return path;
+        }
     }
 
 
@@ -245,6 +317,27 @@ namespace CustomUI
         public static Brush AnnotationTextBright
         {
             get { return Brushes.White; }
+        }
+        public static Brush ClickedButtonColour
+        {
+            get { return new SolidBrush(WhiteOverlay(Primary, 0.32)); }
+        }
+        public static Brush HoverButtonColour
+        {
+            get { return new SolidBrush(WhiteOverlay(Primary, 0.16)); }
+        }
+        public static Color HoverBorderColour
+        {
+            get { return Color.White; }
+        }
+
+        public static Color WhiteOverlay(Color original, double ratio)
+        {
+            Color white = Color.White;
+            return Color.FromArgb(255,
+                (int)(ratio * white.R + (1 - ratio) * original.R),
+                (int)(ratio * white.G + (1 - ratio) * original.G),
+                (int)(ratio * white.B + (1 - ratio) * original.B));
         }
     }
 }
