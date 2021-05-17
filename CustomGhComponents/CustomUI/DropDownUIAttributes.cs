@@ -482,8 +482,25 @@ namespace CustomUI
                 return GH_ObjectResponse.Ignore;
             }
 
+            for (int i = 0; i < ButtonBound.Count; i++)
+            {
+                if (ButtonBound[i].Contains(e.CanvasLocation))
+                {
+                    mouseOver = true;
+                    sender.Cursor = System.Windows.Forms.Cursors.Hand;
+                    return GH_ObjectResponse.Capture;
+                }
+            }
+            if (mouseOver)
+            {
+                mouseOver = false;
+                Grasshopper.Instances.CursorServer.ResetCursor(sender);
+                return GH_ObjectResponse.Release;
+            }
+
             return base.RespondToMouseMove(sender, e);
         }
+        bool mouseOver;
         protected void FixLayout()
         {
             float width = this.Bounds.Width; // initial component width before UI overrides
