@@ -2,9 +2,11 @@
 
 This project is a template repo for creating Custom Grasshopper components with UI overrides.
 
-Two components are provided in the template; one with a clickable button and another with two dropdown menus.
+Three components are provided in the template; a clickable button, two dropdown menus and a slider. You can change the colours easily, and you can use the code to combine buttons, sliders and dropdowns.
 
-![Alt text](readme-screenshot.JPG?raw=true "Title")
+![SliderUIAttributes](https://user-images.githubusercontent.com/25223248/118800903-b5d75b80-b8a0-11eb-918e-ef79c6178615.gif)
+
+
 
 ## To get started:
 1. Clone this repo
@@ -13,4 +15,5 @@ https://developer.rhino3d.com/guides/grasshopper/your-first-component-windows/#b
 
 3. Remember to give each one of your own components a unique ids, you can generate GUIDs from here: https://www.guidgenerator.com/
 
-"# Custom-Grasshopper-UI-Components" 
+## License
+This repo is licensed under the MIT license, you are free to do with it what you want.
